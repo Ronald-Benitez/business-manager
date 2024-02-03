@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String       @id @default(uuid())
+  email      String       @unique
+  name       String
+  password   String
+  enterprise Enterprise[]
+}
+
+model Enterprise {
+  id          String      @id @default(uuid())
+  name        String
+  description String
+  user        User        @relation(fields: [userId], references: [id])
+  userId      String
+  category    Category[]
+  inventory   Inventory[]
+  order       Order[]
+}
+
+model Category {
+  id           String      @id @default(uuid())
+  name         String
+  description  String
+  enterprise   Enterprise  @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String
+  Inventory    Inventory[]
+}
+
+model Inventory {
+  id           String     @id @default(uuid())
+  name         String
+  description  String
+  enterprise   Enterprise @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String
+  category     Category   @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  quantity     Int
+  price        Float
+  unit         String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  product      Product[]
+}
+
+model Product {
+  id          String     @id @default(uuid())
+  name        String
+  description String
+  quantity    Int
+  price       Float
+  cost        Float
+  available   Boolean    @default(true)
+  inventory   Inventory? @relation(fields: [inventoryId], references: [id])
+  inventoryId String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  image       Image[]
+  order       Order[]
+  discount    Discount[]
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  name      String
+  url       String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Discount {
+  id          String     @id @default(uuid())
+  name        String
+  description String
+  value       Float
+  startDate   DateTime
+  endDate     DateTime
+  product     Product    @relation(fields: [productId], references: [id])
+  productId   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Order {
+  id           String     @id @default(uuid())
+  product      Product    @relation(fields: [productId], references: [id])
+  productId    String
+  quantity     Int
+  price        Float
+  cost         Float
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  enterprise   Enterprise @relation(fields: [enterpriseId], references: [id])
+  enterpriseId String
+  discount     Float
+  sale         Sale       @relation(fields: [saleId], references: [id])
+  saleId       String
+}
+
+model Sale {
+  id       String  @id @default(uuid())
+  customer String
+  status   String  @default("Pendiente")
+  Order    Order[]
+}
+
